@@ -9,11 +9,11 @@ import android.media.ToneGenerator;
 import android.os.Build;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 
 import androidx.annotation.RequiresApi;
 
 import com.example.strprojects.R;
-import com.example.strprojects.utils.Utils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
@@ -36,6 +36,7 @@ public class ReactionTimeCount {
 
     private static final int TOTAL_QUANTITY_TO_SHOW = 10;
 
+    private Button[] buttons;
     private FloatingActionButton floatActButton;
     private Context context;
     private int height, width;
@@ -49,6 +50,7 @@ public class ReactionTimeCount {
 
     private Runnable runnable;
 
+    private int[] numberOfClicks;
     private int[] numberOfViews;
     private int[] colors;
 
@@ -57,7 +59,7 @@ public class ReactionTimeCount {
     private ButtonTimes currentCapturedTime;
 
     public static interface ReactionTimerCountListener{
-        void countFinish(List<ButtonTimes> buttonTimesList, int[] numberViews);
+        void countFinish(List<ButtonTimes> buttonTimesList, int[] numberViews, int[] numberOfClicks);
     }
 
     private ReactionTimerCountListener listener;
@@ -67,13 +69,15 @@ public class ReactionTimeCount {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public ReactionTimeCount(Context context, FloatingActionButton floatActButton, ReactionTimeCountTimer timer, int height, int width, ReactionTimerCountListener listener) {
+    public ReactionTimeCount(Context context, FloatingActionButton floatActButton, ReactionTimeCountTimer timer, int height, int width,
+                             ReactionTimerCountListener listener, Button[] buttons) {
         this.context = context;
         this.floatActButton = floatActButton;
         this.timer = timer;
         this.height = height;
         this.width = width;
         this.listener = listener;
+        this.buttons = buttons;
         configCount();
     }
 
@@ -86,7 +90,10 @@ public class ReactionTimeCount {
         colors = new int[]{context.getResources().getColor(R.color.green, null), context.getResources().getColor(R.color.yellow, null),
                 context.getResources().getColor(R.color.red, null), context.getResources().getColor(R.color.blue, null)};
 
-        configFloatActionButton(floatActButton);
+        configButtons(buttons[NUMBER_VIEW_GREEN_BUTTON_INDEX], NUMBER_VIEW_GREEN_BUTTON_INDEX);
+        configButtons(buttons[NUMBER_VIEW_YELLOW_BUTTON_INDEX], NUMBER_VIEW_YELLOW_BUTTON_INDEX);
+        configButtons(buttons[NUMBER_VIEW_RED_BUTTON_INDEX], NUMBER_VIEW_RED_BUTTON_INDEX);
+        configButtons(buttons[NUMBER_VIEW_BLUE_BUTTON_INDEX], NUMBER_VIEW_BLUE_BUTTON_INDEX);
 
         runnable = new Runnable() {
             @Override
@@ -108,7 +115,7 @@ public class ReactionTimeCount {
                     cont++;
                 }
                 if(listener != null){
-                    listener.countFinish(buttonTimesList, numberOfViews);
+                    listener.countFinish(buttonTimesList, numberOfViews, numberOfClicks);
                 }
             }
         };
@@ -203,6 +210,7 @@ public class ReactionTimeCount {
     public void initCount(){
         buttonTimesList = new ArrayList<>();
         numberOfViews = new int[4];
+        numberOfClicks = new int[4];
         currentCapturedTime = new ButtonTimes();
         getChangeRunningValue(true, true);
         executorService = Executors.newSingleThreadExecutor();
@@ -214,12 +222,13 @@ public class ReactionTimeCount {
         //Utils.shutdownAndAwaitTermination(executorService, 1);
     }
 
-    public void configFloatActionButton(FloatingActionButton floatActButton){
-        if(floatActButton != null){
-            floatActButton.setOnClickListener(v -> {
+    public void configButtons(Button button, int index){
+        if(button != null){
+            button.setOnClickListener(v -> {
                 Log.d(TAG, "onClick: click!");
                 final ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME);
                 if(toneGenerator != null) {
+                    numberOfClicks[index]++;
                     currentCapturedTime.setClickDate(new Date());
                     toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, ToneGenerator.MAX_VOLUME);
                     toneGenerator.release();

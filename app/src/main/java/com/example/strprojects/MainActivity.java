@@ -8,6 +8,7 @@ import android.app.Dialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
@@ -30,7 +31,8 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
     private FloatingActionButton floatingActionButton;
 
     private Button runButton, buttonGreen, buttonRed, buttonBlue, buttonYellow;
-    private LinearLayout linearLayout;
+    private LinearLayout linearLayout, linearLayoutButtons;
+    private Button[] buttons;
 
     private ReactionTimeCount reactionTimeCount;
     private ReactionTimeCountTimer timer;
@@ -53,6 +55,11 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         findComponents();
+        buttons = new Button[4];
+        buttons[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] = buttonGreen;
+        buttons[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] = buttonYellow;
+        buttons[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] = buttonRed;
+        buttons[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] = buttonBlue;
         configButtons();
         LoadingDialog dialog = new LoadingDialog(this);
         loadingDialog = dialog.getLoadingDialog();
@@ -71,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
                 Log.d(TAG, "display height: " + linearLayoutHeight + "| width: " + linearLayoutWidth);
                 timer = new ReactionTimeCountTimer(DELAY, PERIOD);
                 reactionTimeCount = new ReactionTimeCount(MainActivity.this,
-                        floatingActionButton, timer, finalDimensions[HEIGHT_INDEX], finalDimensions[WIDTH_INDEX], MainActivity.this);
+                        floatingActionButton, timer, finalDimensions[HEIGHT_INDEX], finalDimensions[WIDTH_INDEX],
+                        MainActivity.this, buttons);
                 loadingDialog.dismiss();
             });
         });
@@ -91,23 +99,36 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
 
     @SuppressLint("RestrictedApi")
     private void startOrStop(boolean start){
-        String buttonText, logMessage;
-        boolean runningValue;
-        if(start){
-            buttonText = getResources().getString(R.string.stop);
-            runningValue = true;
-            logMessage = "Start!";
-        }else{
-            buttonText = getResources().getString(R.string.start);
-            runningValue = false;
-            logMessage = "Stop!";
-        }
-        Log.d(TAG, "startOrStop: " + logMessage);
-        running = runningValue;
-        runButton.setText(buttonText);
+        runOnUiThread(() ->{
+            String buttonText, logMessage;
+            boolean runningValue;
+            int buttonRunVisibility;
+            int linearLayoutButtonsVisibility;
+            if(start){
+                buttonText = getResources().getString(R.string.stop);
+                runningValue = true;
+                logMessage = "Start!";
+                buttonRunVisibility = View.GONE;
+                linearLayoutButtonsVisibility = View.VISIBLE;
+            }else{
+                buttonText = getResources().getString(R.string.start);
+                runningValue = false;
+                logMessage = "Stop!";
+                buttonRunVisibility = View.VISIBLE;
+                linearLayoutButtonsVisibility = View.GONE;
+            }
+            Log.d(TAG, "startOrStop: " + logMessage);
+            running = runningValue;
+            runButton.setVisibility(buttonRunVisibility);
+            linearLayoutButtons.setVisibility(linearLayoutButtonsVisibility);
+            linearLayoutButtons.setEnabled(start);
+            runButton.setText(buttonText);
+            runButton.setClickable(!start);
+        });
     }
 
     private void findComponents(){
+        linearLayoutButtons = findViewById(R.id.ln_buttons);
         linearLayout = findViewById(R.id.linear_layout);
         linearLayout.post(new Runnable() {
             @Override
@@ -121,7 +142,6 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
         buttonGreen = findViewById(R.id.buttonGreen);
         buttonRed = findViewById(R.id.buttonRed);
         buttonYellow = findViewById(R.id.buttonYellow);
-
     }
 
     private int[] getOrSetDimensions(boolean set, int height, int width){
@@ -146,9 +166,9 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
     }
 
     @Override
-    public void countFinish(List<ButtonTimes> buttonTimesList, int[] numberViews) {
+    public void countFinish(List<ButtonTimes> buttonTimesList, int[] numberViews, int[] numberOfClicks) {
         startOrStop(false);
-        ShowReactionTimeAvg showReactionTimeAvg = new ShowReactionTimeAvg(this, buttonTimesList);
+        ShowReactionTimeAvg showReactionTimeAvg = new ShowReactionTimeAvg(this, buttonTimesList, numberViews, numberOfClicks);
         showReactionTimeAvg.show(getSupportFragmentManager(), "REACTION_TIME_RESULT_DIALOG");
     }
 }
