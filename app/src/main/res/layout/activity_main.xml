@@ -36,12 +36,68 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/start"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="1.0"></Button>
+        app:layout_constraintVertical_bias="1.0">
+    </Button>
+
+    <LinearLayout
+        android:id="@+id/ln_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0">
+
+        <Button
+            android:id="@+id/buttonGreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Green"
+            android:backgroundTint="@color/green"
+            android:textColor="@color/black">
+
+        </Button>
+        <Button
+            android:id="@+id/buttonRed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Red"
+            android:backgroundTint="@color/red"
+            android:textColor="@color/black">
+
+        </Button>
+        <Button
+            android:id="@+id/buttonBlue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Blue"
+            android:backgroundTint="@color/blue"
+            android:textColor="@color/black">
+        </Button>
+
+        <Button
+            android:id="@+id/buttonYellow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Yellow"
+            android:backgroundTint="@color/yellow"
+            android:textColor="@color/black">
+        </Button>
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 
 

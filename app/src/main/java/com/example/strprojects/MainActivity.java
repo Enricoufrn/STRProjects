@@ -29,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
 
     private FloatingActionButton floatingActionButton;
 
-    private Button runButton;
+    private Button runButton, buttonGreen, buttonRed, buttonBlue, buttonYellow;
     private LinearLayout linearLayout;
 
     private ReactionTimeCount reactionTimeCount;
@@ -117,6 +117,11 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
         });
         floatingActionButton = findViewById(R.id.float_action_button);
         runButton = findViewById(R.id.run_button);
+        buttonBlue = findViewById(R.id.buttonBlue);
+        buttonGreen = findViewById(R.id.buttonGreen);
+        buttonRed = findViewById(R.id.buttonRed);
+        buttonYellow = findViewById(R.id.buttonYellow);
+
     }
 
     private int[] getOrSetDimensions(boolean set, int height, int width){
