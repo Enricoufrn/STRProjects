@@ -11,6 +11,8 @@ import android.util.Log;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
+import com.example.strprojects.dialogs.ShowReactionTimeAvg;
+import com.example.strprojects.reactiontime.ButtonTimes;
 import com.example.strprojects.reactiontime.ReactionTimeCount;
 import com.example.strprojects.reactiontime.ReactionTimeCountTimer;
 import com.example.strprojects.dialogs.LoadingDialog;
@@ -23,7 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ReactionTimeCount.ReactionTimerCountListener {
 
     private FloatingActionButton floatingActionButton;
 
@@ -34,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private ReactionTimeCountTimer timer;
     private Dialog loadingDialog;
     private ReadWriteLock lock;
-    private List<Date> dateList;
 
     private static final String TAG = "MainActivityLOG";
     private static final int DELAY = 1000;
@@ -69,7 +70,8 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() ->{
                 Log.d(TAG, "display height: " + linearLayoutHeight + "| width: " + linearLayoutWidth);
                 timer = new ReactionTimeCountTimer(DELAY, PERIOD);
-                reactionTimeCount = new ReactionTimeCount(MainActivity.this, floatingActionButton, timer, finalDimensions[HEIGHT_INDEX], finalDimensions[WIDTH_INDEX]);
+                reactionTimeCount = new ReactionTimeCount(MainActivity.this,
+                        floatingActionButton, timer, finalDimensions[HEIGHT_INDEX], finalDimensions[WIDTH_INDEX], MainActivity.this);
                 loadingDialog.dismiss();
             });
         });
@@ -82,25 +84,6 @@ public class MainActivity extends AppCompatActivity {
                 if(!running){
                     startOrStop(true);
                     reactionTimeCount.initCount();
-//                    Handler handler = new Handler();
-//                    handler.postDelayed(() ->{
-//                        runOnUiThread(() -> floatActButton.setVisibility(View.VISIBLE));
-//                    }, DELAY);
-//                    timer.initTimer(new TimerTask() {
-//                        @Override
-//                        public void run() {
-//                            reactionTimeCount.changeFloatActionButtonPosition();
-//                        }
-//                    });
-                }else{
-                    startOrStop(false);
-                    reactionTimeCount.stopCount();
-//                    ShowReactionTimeAvg showReactionTimeAvg = new ShowReactionTimeAvg(v.getContext(), dateList);
-//                    timer.stopTimer();
-//                    Handler handler = new Handler();
-//                    handler.postDelayed(() ->{
-//                        runOnUiThread(() -> showReactionTimeAvg.show(getSupportFragmentManager(), "REACTION_TIME_RESULT_DIALOG"));
-//                    }, DELAY);
                 }
             });
         }
@@ -157,4 +140,10 @@ public class MainActivity extends AppCompatActivity {
         return dimensions;
     }
 
+    @Override
+    public void countFinish(List<ButtonTimes> buttonTimesList, int[] numberViews) {
+        startOrStop(false);
+        ShowReactionTimeAvg showReactionTimeAvg = new ShowReactionTimeAvg(this, buttonTimesList);
+        showReactionTimeAvg.show(getSupportFragmentManager(), "REACTION_TIME_RESULT_DIALOG");
+    }
 }

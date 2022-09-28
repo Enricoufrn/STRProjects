@@ -1,7 +1,9 @@
 package com.example.strprojects.reactiontime;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Build;
@@ -11,11 +13,17 @@ import android.view.View;
 import androidx.annotation.RequiresApi;
 
 import com.example.strprojects.R;
+import com.example.strprojects.utils.Utils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ReactionTimeCount {
 
@@ -24,64 +32,125 @@ public class ReactionTimeCount {
     public static final int NUMBER_VIEW_RED_BUTTON_INDEX = 2;
     public static final int NUMBER_VIEW_BLUE_BUTTON_INDEX = 3;
 
+    private static final int TIME_TO_GONE_BUTTON = 1300;
+
+    private static final int TOTAL_QUANTITY_TO_SHOW = 10;
+
     private FloatingActionButton floatActButton;
     private Context context;
     private int height, width;
     private List<ButtonTimes> buttonTimesList;
     private ReactionTimeCountTimer timer;
+
+    ExecutorService executorService;
+    private ReadWriteLock lock;
+    boolean running;
+
+
     private Runnable runnable;
+
     private int[] numberOfViews;
     private int[] colors;
+
     private static final String TAG = "ReactionTimeCount";
 
     private ButtonTimes currentCapturedTime;
+
+    public static interface ReactionTimerCountListener{
+        void countFinish(List<ButtonTimes> buttonTimesList, int[] numberViews);
+    }
+
+    private ReactionTimerCountListener listener;
 
     public ReactionTimeCount(){
 
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
-    public ReactionTimeCount(Context context, FloatingActionButton floatActButton, ReactionTimeCountTimer timer, int height, int width) {
+    public ReactionTimeCount(Context context, FloatingActionButton floatActButton, ReactionTimeCountTimer timer, int height, int width, ReactionTimerCountListener listener) {
         this.context = context;
         this.floatActButton = floatActButton;
         this.timer = timer;
         this.height = height;
         this.width = width;
+        this.listener = listener;
         configCount();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void configCount() {
         currentCapturedTime = new ButtonTimes();
+        lock = new ReentrantReadWriteLock();
+
         numberOfViews = new int[4];
         colors = new int[]{context.getResources().getColor(R.color.green, null), context.getResources().getColor(R.color.yellow, null),
                 context.getResources().getColor(R.color.red, null), context.getResources().getColor(R.color.blue, null)};
+
         configFloatActionButton(floatActButton);
+
         runnable = new Runnable() {
             @Override
             public void run() {
-                currentCapturedTime.setShowDate(new Date());
-                int displayedColorIndex = showButtonWithRandomColor();
-                countViews(displayedColorIndex);
-                hiddenButton();
-                currentCapturedTime.setHiddenDate(new Date());
+                int cont = 0;
+                while(getChangeRunningValue(false, false) && cont < TOTAL_QUANTITY_TO_SHOW){
+                    currentCapturedTime.setShowDate(new Date());
+                    currentCapturedTime.setClickDate(null);
+                    int displayedColorIndex = showButtonWithRandomColor();
+                    countViews(displayedColorIndex);
+                    try {
+                        Thread.sleep(TIME_TO_GONE_BUTTON);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    hiddenButton();
+                    currentCapturedTime.setHiddenDate(new Date());
+                    buttonTimesList.add(currentCapturedTime);
+                    cont++;
+                }
+                if(listener != null){
+                    listener.countFinish(buttonTimesList, numberOfViews);
+                }
             }
         };
     }
 
     private void countViews(int displayedColorIndex) {
+        switch (displayedColorIndex){
+            case NUMBER_VIEW_GREEN_BUTTON_INDEX:
+                numberOfViews[NUMBER_VIEW_GREEN_BUTTON_INDEX]++;
+                break;
+            case NUMBER_VIEW_YELLOW_BUTTON_INDEX:
+                numberOfViews[NUMBER_VIEW_YELLOW_BUTTON_INDEX]++;
+                break;
+            case NUMBER_VIEW_RED_BUTTON_INDEX:
+                numberOfViews[NUMBER_VIEW_RED_BUTTON_INDEX]++;
+                break;
+            case NUMBER_VIEW_BLUE_BUTTON_INDEX:
+                numberOfViews[NUMBER_VIEW_BLUE_BUTTON_INDEX]++;
+                break;
+            default:
+                break;
+        }
     }
 
+    @SuppressLint("RestrictedApi")
     private void hiddenButton() {
-
+        ((Activity)context).runOnUiThread(()->{
+            floatActButton.setClickable(false);
+            floatActButton.setVisibility(View.GONE);
+            changeFloatActionButtonPosition(floatActButton);
+        });
     }
 
     @SuppressLint("RestrictedApi")
     private int showButtonWithRandomColor() {
         int randomColorIndex = generateRandomInt(colors.length);
-        changeFloatActionButtonPosition(floatActButton);
-        floatActButton.setBackgroundColor(colors[randomColorIndex]);
-        floatActButton.setVisibility(View.VISIBLE);
+        ((Activity)context).runOnUiThread(() ->{
+            changeFloatActionButtonPosition(floatActButton);
+            floatActButton.setBackgroundTintList(ColorStateList.valueOf(colors[randomColorIndex]));
+            floatActButton.setClickable(true);
+            floatActButton.setVisibility(View.VISIBLE);
+        });
         return randomColorIndex;
     }
 
@@ -132,11 +201,17 @@ public class ReactionTimeCount {
     }
 
     public void initCount(){
-
+        buttonTimesList = new ArrayList<>();
+        numberOfViews = new int[4];
+        currentCapturedTime = new ButtonTimes();
+        getChangeRunningValue(true, true);
+        executorService = Executors.newSingleThreadExecutor();
+        executorService.submit(runnable);
     }
 
     public void stopCount(){
-
+        getChangeRunningValue(true, false);
+        //Utils.shutdownAndAwaitTermination(executorService, 1);
     }
 
     public void configFloatActionButton(FloatingActionButton floatActButton){
@@ -144,21 +219,13 @@ public class ReactionTimeCount {
             floatActButton.setOnClickListener(v -> {
                 Log.d(TAG, "onClick: click!");
                 final ToneGenerator toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, ToneGenerator.MAX_VOLUME);
-//                if(dateList != null && toneGenerator != null) {
-//                    dateList.add(new Date());
-//                    toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, ToneGenerator.MAX_VOLUME);
-//                    toneGenerator.release();
-//                }
+                if(toneGenerator != null) {
+                    currentCapturedTime.setClickDate(new Date());
+                    toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, ToneGenerator.MAX_VOLUME);
+                    toneGenerator.release();
+                }
             });
         }
-    }
-
-    public List<ButtonTimes> getButtonTimesList() {
-        return buttonTimesList;
-    }
-
-    public void setDateList(List<ButtonTimes> buttonTimesList) {
-        this.buttonTimesList = buttonTimesList;
     }
 
     public Context getContext() {
@@ -167,10 +234,6 @@ public class ReactionTimeCount {
 
     public void setContext(Context context) {
         this.context = context;
-    }
-
-    public void setButtonTimesList(List<ButtonTimes> buttonTimesList) {
-        this.buttonTimesList = buttonTimesList;
     }
 
     public ReactionTimeCountTimer getTimer() {
@@ -188,4 +251,56 @@ public class ReactionTimeCount {
     public void setRunnable(Runnable runnable) {
         this.runnable = runnable;
     }
+
+    public List<ButtonTimes> getButtonTimesList() {
+        return buttonTimesList;
+    }
+
+    public void setButtonTimesList(List<ButtonTimes> buttonTimesList) {
+        this.buttonTimesList = buttonTimesList;
+    }
+
+    public int[] getNumberOfViews() {
+        return numberOfViews;
+    }
+
+    public void setNumberOfViews(int[] numberOfViews) {
+        this.numberOfViews = numberOfViews;
+    }
+
+    public int[] getColors() {
+        return colors;
+    }
+
+    public void setColors(int[] colors) {
+        this.colors = colors;
+    }
+
+    public ButtonTimes getCurrentCapturedTime() {
+        return currentCapturedTime;
+    }
+
+    public void setCurrentCapturedTime(ButtonTimes currentCapturedTime) {
+        this.currentCapturedTime = currentCapturedTime;
+    }
+
+    private boolean getChangeRunningValue(boolean change, boolean value){
+        if (change){
+            lock.writeLock().lock();
+            try {
+                running = value;
+            }finally {
+                lock.writeLock().unlock();
+            }
+        }
+        boolean run;
+        lock.readLock().lock();
+        try {
+            run = running;
+        }finally {
+            lock.readLock().unlock();
+        }
+        return run;
+    }
+
 }
