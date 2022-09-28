@@ -1,23 +1,23 @@
 package com.example.strprojects;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.constraintlayout.widget.ConstraintLayout;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
+import android.os.Build;
 import android.os.Bundle;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.LinearLayout;
 
 import com.example.strprojects.reactiontime.ReactionTimeCount;
 import com.example.strprojects.reactiontime.ReactionTimeCountTimer;
-import com.example.strprojects.utils.LoadingDialog;
+import com.example.strprojects.dialogs.LoadingDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Executor;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -25,7 +25,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class MainActivity extends AppCompatActivity {
 
-    private FloatingActionButton floatActButton;
+    private FloatingActionButton floatingActionButton;
+
     private Button runButton;
     private LinearLayout linearLayout;
 
@@ -33,19 +34,19 @@ public class MainActivity extends AppCompatActivity {
     private ReactionTimeCountTimer timer;
     private Dialog loadingDialog;
     private ReadWriteLock lock;
+    private List<Date> dateList;
 
     private static final String TAG = "MainActivityLOG";
     private static final int DELAY = 1000;
-    private static final int PERIOD = 2000;
+    private static final int PERIOD = 1500;
     private static final int HEIGHT_INDEX = 0;
     private static final int WIDTH_INDEX = 1;
 
     private boolean running = false;
     private int linearLayoutHeight;
     private int linearLayoutWidth;
-    private float initFloatButtonPositionX;
-    private float initFloatButtonPositionY;
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,9 +56,7 @@ public class MainActivity extends AppCompatActivity {
         LoadingDialog dialog = new LoadingDialog(this);
         loadingDialog = dialog.getLoadingDialog();
         lock = new ReentrantReadWriteLock();
-
         Log.d(TAG, "onCreate: display height: " + linearLayoutHeight + "| width: " + linearLayoutWidth);
-
         loadingDialog.show();
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         executorService.submit(() ->{
@@ -69,35 +68,60 @@ public class MainActivity extends AppCompatActivity {
             int[] finalDimensions = dimensions;
             runOnUiThread(() ->{
                 Log.d(TAG, "display height: " + linearLayoutHeight + "| width: " + linearLayoutWidth);
-                reactionTimeCount = new ReactionTimeCount(floatActButton, finalDimensions[HEIGHT_INDEX], finalDimensions[WIDTH_INDEX]);
                 timer = new ReactionTimeCountTimer(DELAY, PERIOD);
+                reactionTimeCount = new ReactionTimeCount(MainActivity.this, floatingActionButton, timer, finalDimensions[HEIGHT_INDEX], finalDimensions[WIDTH_INDEX]);
                 loadingDialog.dismiss();
             });
         });
     }
 
+    @SuppressLint("RestrictedApi")
     private void configButtons() {
         if(runButton != null){
             runButton.setOnClickListener(v -> {
                 if(!running){
-                    Log.d(TAG, "onClick: Start");
-                    timer.initTimer(new TimerTask() {
-                        @Override
-                        public void run() {
-                            reactionTimeCount.changeFloatActionButtonPosition();
-                        }
-                    });
-                    running = true;
-                    runButton.setText(getResources().getString(R.string.stop));
+                    startOrStop(true);
+                    reactionTimeCount.initCount();
+//                    Handler handler = new Handler();
+//                    handler.postDelayed(() ->{
+//                        runOnUiThread(() -> floatActButton.setVisibility(View.VISIBLE));
+//                    }, DELAY);
+//                    timer.initTimer(new TimerTask() {
+//                        @Override
+//                        public void run() {
+//                            reactionTimeCount.changeFloatActionButtonPosition();
+//                        }
+//                    });
                 }else{
-                    Log.d(TAG, "onClick: Stop");
-                    timer.stopTimer();
-                    running = false;
-                    reactionTimeCount.setFloatActButtonPosition(initFloatButtonPositionX, initFloatButtonPositionY);
-                    runButton.setText(getResources().getString(R.string.start));
+                    startOrStop(false);
+                    reactionTimeCount.stopCount();
+//                    ShowReactionTimeAvg showReactionTimeAvg = new ShowReactionTimeAvg(v.getContext(), dateList);
+//                    timer.stopTimer();
+//                    Handler handler = new Handler();
+//                    handler.postDelayed(() ->{
+//                        runOnUiThread(() -> showReactionTimeAvg.show(getSupportFragmentManager(), "REACTION_TIME_RESULT_DIALOG"));
+//                    }, DELAY);
                 }
             });
         }
+    }
+
+    @SuppressLint("RestrictedApi")
+    private void startOrStop(boolean start){
+        String buttonText, logMessage;
+        boolean runningValue;
+        if(start){
+            buttonText = getResources().getString(R.string.stop);
+            runningValue = true;
+            logMessage = "Start!";
+        }else{
+            buttonText = getResources().getString(R.string.start);
+            runningValue = false;
+            logMessage = "Stop!";
+        }
+        Log.d(TAG, "startOrStop: " + logMessage);
+        running = runningValue;
+        runButton.setText(buttonText);
     }
 
     private void findComponents(){
@@ -106,11 +130,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 getOrSetDimensions(true, linearLayout.getHeight(), linearLayout.getWidth());
-                initFloatButtonPositionX = floatActButton.getTranslationX();
-                initFloatButtonPositionY = floatActButton.getTranslationY();
             }
         });
-        floatActButton = findViewById(R.id.float_action_button);
+        floatingActionButton = findViewById(R.id.float_action_button);
         runButton = findViewById(R.id.run_button);
     }
 

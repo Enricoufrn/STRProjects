@@ -2,4 +2,6 @@
     <string name="app_name">STRProjects</string>
     <string name="start">START</string>
     <string name="stop">STOP</string>
+    <string name="dialog_reaction_time_result_title">Reaction time summary</string>
+    <string name="reaction_time_avg">Average time:</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.example.strprojects.utils;
+package com.example.strprojects.dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
