@@ -36,6 +36,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/start"
+        android:padding="@dimen/default_padding_button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="1.0"
@@ -62,15 +63,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:padding="@dimen/default_padding_button"
             android:backgroundTint="@color/green"
             android:textColor="@color/black">
-
         </Button>
         <Button
             android:id="@+id/buttonRed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:padding="@dimen/default_padding_button"
             android:backgroundTint="@color/red"
             android:textColor="@color/black">
 
@@ -80,6 +82,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:padding="@dimen/default_padding_button"
             android:backgroundTint="@color/blue"
             android:textColor="@color/black">
         </Button>
@@ -89,6 +92,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:padding="@dimen/default_padding_button"
             android:backgroundTint="@color/yellow"
             android:textColor="@color/black">
         </Button>

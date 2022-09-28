@@ -29,6 +29,10 @@ public class ShowReactionTimeAvg extends DialogFragment {
     private int[] numberOfViews;
     private int[] numberOfClicks;
 
+    public static final int SCORE_INDEX = 0;
+    public static final int SUCCESS_CLICK_INDEX = 1;
+    public static final int FAIL_CLICK_INDEX = 2;
+
     public ShowReactionTimeAvg(Context context, List<ButtonTimes> buttonTimesList, int[] numberOfViews, int[] numberOfClicks) {
         this.context = context;
         this.buttonTimesList = buttonTimesList;
@@ -56,35 +60,53 @@ public class ShowReactionTimeAvg extends DialogFragment {
         tvScore = view.findViewById(R.id.tv_score);
         String reactionTimeAvg = tvReactionTimeAvg.getText().toString() + " " + calculateAvgTime() + "ms";
         tvReactionTimeAvg.setText(reactionTimeAvg);
-        String score = tvScore.getText().toString() + " " + calculateScore();
+        int[] resultCount = calculateScore();
+        String score = "Hits: " + resultCount[SUCCESS_CLICK_INDEX] + "\n" +
+                "Miss: " + resultCount[FAIL_CLICK_INDEX] + "\n" +
+                tvScore.getText().toString() + " " + resultCount[SCORE_INDEX];
         tvScore.setText(score);
     }
 
-    private int calculateScore() {
+    private int[] calculateScore() {
         int success = 0;
         int fail = 0;
 
-        if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] == 0)
+        if (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] == 0) {
             success = success + numberOfClicks[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX];
-        else
-            fail = fail + (-1* (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX]));
+        }else {
+            fail = fail + (-1 * (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX]));
+            if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] != 0)
+                success = numberOfClicks[ReactionTimeCount.NUMBER_VIEW_GREEN_BUTTON_INDEX] - fail;
+        }
 
-        if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] == 0)
+        if (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] == 0) {
             success = success + numberOfClicks[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX];
-        else
-            fail = fail + (-1* (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX]));
+        }else {
+            fail = fail + (-1 * (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX]));
+            if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] != 0)
+                success = numberOfClicks[ReactionTimeCount.NUMBER_VIEW_YELLOW_BUTTON_INDEX] - fail;
+        }
 
-        if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] == 0)
+        if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] == 0) {
             success = success + numberOfClicks[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX];
-        else
-            fail = fail + (-1* (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX]));
+        }else {
+            fail = fail + (-1 * (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX]));
+            if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] != 0)
+                success = numberOfClicks[ReactionTimeCount.NUMBER_VIEW_RED_BUTTON_INDEX] - fail;
+        }
 
-        if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] == 0)
+        if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] == 0){
             success = success + numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX];
-        else
-            fail = fail + (-1* (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX]));
-
-        return success - fail;
+        }else {
+            fail = fail + (-1 * (numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] - numberOfViews[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX]));
+            if(numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] != 0)
+                success = numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] - fail;
+        }
+        int[] result = new int[3];
+        result[SCORE_INDEX] = success - fail;
+        result[SUCCESS_CLICK_INDEX] = success;
+        result[FAIL_CLICK_INDEX] = fail;
+        return result;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

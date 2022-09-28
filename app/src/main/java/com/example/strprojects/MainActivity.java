@@ -120,8 +120,8 @@ public class MainActivity extends AppCompatActivity implements ReactionTimeCount
             Log.d(TAG, "startOrStop: " + logMessage);
             running = runningValue;
             runButton.setVisibility(buttonRunVisibility);
-            linearLayoutButtons.setVisibility(linearLayoutButtonsVisibility);
             linearLayoutButtons.setEnabled(start);
+            linearLayoutButtons.setVisibility(linearLayoutButtonsVisibility);
             runButton.setText(buttonText);
             runButton.setClickable(!start);
         });

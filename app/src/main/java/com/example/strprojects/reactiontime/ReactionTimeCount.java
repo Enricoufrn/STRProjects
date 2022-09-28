@@ -100,19 +100,19 @@ public class ReactionTimeCount {
             public void run() {
                 int cont = 0;
                 while(getChangeRunningValue(false, false) && cont < TOTAL_QUANTITY_TO_SHOW){
-                    currentCapturedTime.setShowDate(new Date());
                     currentCapturedTime.setClickDate(null);
+                    currentCapturedTime.setShowDate(new Date());
                     int displayedColorIndex = showButtonWithRandomColor();
                     countViews(displayedColorIndex);
                     try {
                         Thread.sleep(TIME_TO_GONE_BUTTON);
+                        hiddenButton();
+                        currentCapturedTime.setHiddenDate(new Date());
+                        buttonTimesList.add(currentCapturedTime);
+                        cont++;
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    hiddenButton();
-                    currentCapturedTime.setHiddenDate(new Date());
-                    buttonTimesList.add(currentCapturedTime);
-                    cont++;
                 }
                 if(listener != null){
                     listener.countFinish(buttonTimesList, numberOfViews, numberOfClicks);
@@ -163,8 +163,8 @@ public class ReactionTimeCount {
 
     public void changeFloatActionButtonPosition(FloatingActionButton floatActButton){
         if(floatActButton != null){
-            int positionX = generateRandomInt(width - floatActButton.getWidth());
-            int positionY = generateRandomInt(height - floatActButton.getHeight());
+            int positionX = generateRandomInt(width - floatActButton.getWidth() + 50);
+            int positionY = generateRandomInt(height - floatActButton.getHeight() + 50);
             Log.d(TAG, "changeFloatActionButtonPosition: random coordinates generated: x = " + positionX + " | y = " + positionY);
             floatActButton.setX((float)positionX);
             floatActButton.setY((float)positionY);
