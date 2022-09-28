@@ -103,7 +103,10 @@ public class ShowReactionTimeAvg extends DialogFragment {
                 success = numberOfClicks[ReactionTimeCount.NUMBER_VIEW_BLUE_BUTTON_INDEX] - fail;
         }
         int[] result = new int[3];
-        result[SCORE_INDEX] = success - fail;
+        if(success == 0)
+            result[SCORE_INDEX] = fail;
+        else
+            result[SCORE_INDEX] = success - fail;
         result[SUCCESS_CLICK_INDEX] = success;
         result[FAIL_CLICK_INDEX] = fail;
         return result;
