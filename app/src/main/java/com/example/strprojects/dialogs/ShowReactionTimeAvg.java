@@ -104,7 +104,7 @@ public class ShowReactionTimeAvg extends DialogFragment {
         }
         int[] result = new int[3];
         if(success == 0)
-            result[SCORE_INDEX] = fail;
+            result[SCORE_INDEX] =  -1*fail;
         else
             result[SCORE_INDEX] = success - fail;
         result[SUCCESS_CLICK_INDEX] = success;
